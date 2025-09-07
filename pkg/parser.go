@@ -83,6 +83,9 @@ func ParseString2(s string) (map[string]string, error) {
 	quote_flag := false
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "export ") {
+			line = strings.TrimSpace(strings.TrimPrefix(line, "export "))
+		}
 		separator_index := strings.Index(line, "=")
 		if separator_index == -1 {
 			// handle comments and empty lines
@@ -114,6 +117,13 @@ func ParseString2(s string) (map[string]string, error) {
 		} else if !quote_flag {
 			key = strings.TrimSpace(line[:separator_index])
 			value = strings.TrimSpace(line[separator_index+1:])
+			if value == "" {
+				// empty value
+				parsed[key] = value
+				key = ""
+				value = ""
+				continue
+			}
 			if value[0] == '"' {
 				// start of quoted value
 				quote_flag = true

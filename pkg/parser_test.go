@@ -78,6 +78,20 @@ func TestParseString(t *testing.T) {
 		}
 	})
 
+	t.Run("test export format", func(t *testing.T) {
+		data := "export KEY=VALUE"
+		got, err := ParseString2(data)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		expected := map[string]string{
+			"KEY": "VALUE",
+		}
+		if !reflect.DeepEqual(got, expected) {
+			t.Fatalf("expected %v, got %v", expected, got)
+		}
+	})
+
 	t.Run("test missing quotes", func(t *testing.T) {
 		data := fmt.Sprintf("\"KEY=\"VALUE")
 		_, err := ParseString2(data)
