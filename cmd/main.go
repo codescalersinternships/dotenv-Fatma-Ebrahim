@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"sort"
+
 	parser "github.com/codescalersinternships/dotenv-Fatma-Ebrahim/pkg"
 )
 
@@ -18,10 +20,16 @@ func main(){
 		fmt.Println("Error:", err)
 		return
 	}
-	for key, value := range res {
-		fmt.Printf("%s=%s\n", key, value)
+	// sort keys alphabetically
+	keys := make([]string, 0, len(res))
+	for key := range res {
+		keys = append(keys, key)
 	}
-	fmt.Println("Parsed Result:", res)
+	sort.Strings(keys)
+	for _, key := range keys {
+		fmt.Printf("%s=%s\n", key, res[key])
+	}
+
 
 }
 

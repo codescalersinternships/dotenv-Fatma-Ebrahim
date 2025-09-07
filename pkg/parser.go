@@ -82,8 +82,8 @@ func ParseString2(s string) (map[string]string, error) {
 	var key string
 	quote_flag := false
 	for _, line := range lines {
-		separator_index := strings.Index(line, "=")
 		line = strings.TrimSpace(line)
+		separator_index := strings.Index(line, "=")
 		if separator_index == -1 {
 			// handle comments and empty lines
 			if line[0] == '#' || line == "" {
@@ -94,6 +94,12 @@ func ParseString2(s string) (map[string]string, error) {
 				closing_quote_idx := strings.Index(line, "\"")
 				if closing_quote_idx != -1 {
 					line = strings.TrimSpace(line[:closing_quote_idx+1])
+					quote_flag = false
+					value += "\n" + line
+					parsed[key] = value
+					key = ""
+					value = ""
+					continue
 				}
 				value += "\n" + line
 				continue
@@ -108,13 +114,11 @@ func ParseString2(s string) (map[string]string, error) {
 		} else if !quote_flag {
 			key = strings.TrimSpace(line[:separator_index])
 			value = strings.TrimSpace(line[separator_index+1:])
-			fmt.Println("1:",line)
 			if value[0] == '"' {
 				// start of quoted value
 				quote_flag = true
 			}
 		} else {
-			fmt.Println("2:",line,quote_flag)
 			value += "\n" + line
 			parsed[key] = value
 			continue
