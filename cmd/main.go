@@ -27,8 +27,9 @@ func main(){
 	}
 	sort.Strings(keys)
 	for _, key := range keys {
-		fmt.Printf("%s=%s\n", key, res[key])
+		fmt.Printf("%s=%s\n\n", key, res[key])
 	}
+	
 
 
 }

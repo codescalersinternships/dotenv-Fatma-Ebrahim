@@ -86,7 +86,7 @@ func ParseString2(s string) (map[string]string, error) {
 		separator_index := strings.Index(line, "=")
 		if separator_index == -1 {
 			// handle comments and empty lines
-			if line[0] == '#' || line == "" {
+			if line == "" ||line[0] == '#' {
 				continue
 			}
 			// end and middle of quoted value
@@ -118,6 +118,15 @@ func ParseString2(s string) (map[string]string, error) {
 				// start of quoted value
 				quote_flag = true
 			}
+			// one line quoted value
+			val := value[1:]
+			closing_quote_idx := strings.Index(val, "\"")
+			if closing_quote_idx != -1 {
+				value = value[:closing_quote_idx+2]
+				quote_flag = false
+				parsed[key] = value
+				continue
+			}
 		} else {
 			value += "\n" + line
 			parsed[key] = value
@@ -131,8 +140,13 @@ func ParseString2(s string) (map[string]string, error) {
 		parsed[key] = value
 
 	}
+	if quote_flag {
+		return nil, fmt.Errorf("missing closing quote")
+	}
 	return parsed, nil
 }
+
+
 
 func ParseFile(path string) (map[string]string, error) {
 	file, err := os.Open(path)
