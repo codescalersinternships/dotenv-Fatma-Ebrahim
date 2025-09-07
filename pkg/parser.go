@@ -2,6 +2,8 @@ package dotenv_parser
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"strings"
 )
 
@@ -10,17 +12,28 @@ func ParseString(s string) (map[string]string, error) {
 	key_counter := 0
 	for len(s) > 0 {
 		fmt.Println("Remaining string to parse:", s)
+		fmt.Println("Parsed so far:", parsed)
+		// handle comments at the beginning of the line
+		if s[0] == '#' {
+			end_idx := strings.Index(s, "\n")
+			if end_idx == -1 {
+				break
+			}
+			s = s[end_idx+1:]
+			continue
+		}
 		key_counter++
 		separator_idx := strings.Index(s, "=")
 		if separator_idx == -1 {
-			return nil, fmt.Errorf("invalid format in key %d", key_counter)
+			return nil, fmt.Errorf("missing '=' for key %d", key_counter)
 		}
+
+		// handle spaces around keys and values
 		key := strings.TrimSpace(s[:separator_idx])
-		fmt.Println("Parsed key:", key)
-		value := strings.TrimSpace(s[separator_idx+1:])
-		fmt.Println("Parsed value before processing:", value)
-	
-		start_idx := separator_idx + 1
+		value := strings.TrimSpace(s[separator_idx+1:])		
+		s = key + "=" + value
+
+		start_idx := len(key) + 1
 		if value[0] == '"' {
 			// handle quoted values
 			value = value[1:]
@@ -32,31 +45,47 @@ func ParseString(s string) (map[string]string, error) {
 			value = strings.TrimSpace(value[:end_idx])
 			pair_end_idx := strings.Index(s, value)
 			if pair_end_idx >= len(s) {
-				pair_end_idx = len(s)-1
+				pair_end_idx = len(s) - 1
 			}
 			s = strings.TrimSpace(s[pair_end_idx+len(value)+1:])
 
 		} else {
 			// handle non-quoted values
-			end_idx := strings.Index(s, "\n")
+			end_idx := strings.Index(value, "\n")
 			if end_idx == -1 {
-				end_idx = len(s)
+				end_idx = len(value) - 1
 			}
 			if start_idx > end_idx {
 				return nil, fmt.Errorf("invalid format in key %d", key_counter)
 			}
-			value = strings.TrimSpace(s[start_idx:end_idx])
-			if end_idx >= len(s){
-				end_idx = len(s)-1
+
+			value = strings.TrimSpace(value[:end_idx+1])
+
+			// handle inline comments
+			comment_idx := strings.Index(value, "#")
+			if comment_idx != -1 {
+				value = strings.TrimSpace(value[:comment_idx])
 			}
-			s = strings.TrimSpace(s[end_idx+1:])
+
+			fmt.Println("Parsed value after processing:", value)
+			s = strings.TrimSpace(s[end_idx+len(value):])
 		}
 		parsed[key] = value
 	}
 	return parsed, nil
-	// support comments, multilines and quoted values, export keyword
 }
 
 func ParseFile(path string) (map[string]string, error) {
-	return nil, fmt.Errorf("not implemented")
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseString(string(content))
 }
