@@ -18,6 +18,9 @@ func main(){
 		fmt.Println("Error:", err)
 		return
 	}
+	for key, value := range res {
+		fmt.Printf("%s=%s\n", key, value)
+	}
 	fmt.Println("Parsed Result:", res)
 
 }

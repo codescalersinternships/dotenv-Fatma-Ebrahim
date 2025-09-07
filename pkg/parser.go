@@ -30,7 +30,7 @@ func ParseString(s string) (map[string]string, error) {
 
 		// handle spaces around keys and values
 		key := strings.TrimSpace(s[:separator_idx])
-		value := strings.TrimSpace(s[separator_idx+1:])		
+		value := strings.TrimSpace(s[separator_idx+1:])
 		s = key + "=" + value
 
 		start_idx := len(key) + 1
@@ -75,6 +75,61 @@ func ParseString(s string) (map[string]string, error) {
 	return parsed, nil
 }
 
+func ParseString2(s string) (map[string]string, error) {
+	parsed := make(map[string]string)
+	lines := strings.Split(s, "\n")
+	var value string
+	var key string
+	quote_flag := false
+	for _, line := range lines {
+		separator_index := strings.Index(line, "=")
+		line = strings.TrimSpace(line)
+		if separator_index == -1 {
+			// handle comments and empty lines
+			if line[0] == '#' || line == "" {
+				continue
+			}
+			// end and middle of quoted value
+			if quote_flag {
+				closing_quote_idx := strings.Index(line, "\"")
+				if closing_quote_idx != -1 {
+					line = strings.TrimSpace(line[:closing_quote_idx+1])
+				}
+				value += "\n" + line
+				continue
+			}
+			// empty value
+			key = line
+			value = ""
+			parsed[key] = value
+			key = ""
+			value = ""
+			continue
+		} else if !quote_flag {
+			key = strings.TrimSpace(line[:separator_index])
+			value = strings.TrimSpace(line[separator_index+1:])
+			fmt.Println("1:",line)
+			if value[0] == '"' {
+				// start of quoted value
+				quote_flag = true
+			}
+		} else {
+			fmt.Println("2:",line,quote_flag)
+			value += "\n" + line
+			parsed[key] = value
+			continue
+		}
+
+		comment_idx := strings.Index(value, "#")
+		if comment_idx != -1 {
+			value = strings.TrimSpace(value[:comment_idx])
+		}
+		parsed[key] = value
+
+	}
+	return parsed, nil
+}
+
 func ParseFile(path string) (map[string]string, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -87,5 +142,5 @@ func ParseFile(path string) (map[string]string, error) {
 		return nil, err
 	}
 
-	return ParseString(string(content))
+	return ParseString2(string(content))
 }
