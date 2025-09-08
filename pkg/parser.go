@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// ParseString a function that takes a string of .env data and returns a map of key-value pairs
 func ParseString(s string) (map[string]string, error) {
 	parsed := make(map[string]string)
 	lines := strings.Split(s, "\n")
@@ -20,8 +21,8 @@ func ParseString(s string) (map[string]string, error) {
 		}
 		separator_index := strings.Index(line, "=")
 		if separator_index == -1 {
-			// handle comments and empty lines
-			if line == "" || line[0] == '#' {
+			// comments and empty lines
+			if line == "" || strings.HasPrefix(line, "#") {
 				continue
 			}
 			// end and middle of quoted value
@@ -57,7 +58,7 @@ func ParseString(s string) (map[string]string, error) {
 				value = ""
 				continue
 			}
-			if value[0] == '"' {
+			if strings.HasPrefix(value, "\"") {
 				// start of quoted value
 				quote_flag = true
 			}
@@ -80,7 +81,7 @@ func ParseString(s string) (map[string]string, error) {
 			value = strings.TrimSpace(value[:comment_idx])
 		}
 		// non-quoted value
-		if value[0] != '"' {
+		if !strings.HasPrefix(value, "\"") {
 			parsed[key] = value
 			continue
 		}
@@ -92,6 +93,7 @@ func ParseString(s string) (map[string]string, error) {
 	return parsed, nil
 }
 
+// ParseFile a function that takes a path to a .env file and returns a map of key-value pairs
 func ParseFile(path string) (map[string]string, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -107,6 +109,23 @@ func ParseFile(path string) (map[string]string, error) {
 	return ParseString(string(content))
 }
 
+// LoadEnvString a function that takes a string of .env data and loads the environment variables into the process
+func LoadEnvString(s string) error {
+	res, err := ParseString(s)
+	if err != nil {
+		return err
+	}
+	for key, value := range res {
+		err:=os.Setenv(key, value)
+		if err != nil {
+			return err
+		}
+		
+	}
+	return nil
+}
+
+// LoadEnvFile a function that takes a path to a .env file and loads the environment variables into the process
 func LoadEnvFile(path string) error {
 	res, err := ParseFile(path)
 	if err != nil {
@@ -122,17 +141,3 @@ func LoadEnvFile(path string) error {
 	return nil
 }
 
-func LoadEnvString(s string) error {
-	res, err := ParseString(s)
-	if err != nil {
-		return err
-	}
-	for key, value := range res {
-		err:=os.Setenv(key, value)
-		if err != nil {
-			return err
-		}
-		
-	}
-	return nil
-}
