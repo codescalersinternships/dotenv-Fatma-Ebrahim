@@ -9,10 +9,10 @@ takes a string of .env data and returns a map of key-value pairs.
 takes a path to a .env file and returns a map of key-value pairs.
 
 ### `LoadEnvString(s string) error`
-takes a string of .env data and loads the environment variables into the process.
+takes a string of .env data and loads the environment variables.
 
 ### `LoadEnvFile(path string) error`
-takes a path to a .env file and loads the environment variables into the process.
+takes a path to a .env file and loads the environment variables.
 
 
 
